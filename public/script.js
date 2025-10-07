@@ -743,18 +743,6 @@ console.log('♿ Accessibility toolbar script loaded - starting initialization..
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
             
-            // Simple validation
-            if (!data.name || !data.email || !data.message) {
-                showNotification('Please fill in all required fields', 'error');
-                return;
-            }
-            
-            // Email validation
-            if (!isValidEmail(data.email)) {
-                showNotification('Please enter a valid email address', 'error');
-                return;
-            }
-            
             // Get submit button and show loading state
             const submitBtn = this.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
