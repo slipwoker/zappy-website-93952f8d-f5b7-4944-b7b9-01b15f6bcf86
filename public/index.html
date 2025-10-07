@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>עץ במקום - נגרות ועבודות עץ בהתאמה אישית</title>
+    <meta name="description" content="עץ במקום - נגרות מקצועית ועבודות עץ בהתאמה אישית. מתמחים ברהיטים מעוצבים, ארונות מטבח, ופתרונות אחסון לבית ולעסק.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512x512.png">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <!-- Cookie Consent -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanilla-cookieconsent@3/dist/cookieconsent.css" />
+    <script src="https://cdn.jsdelivr.net/npm/vanilla-cookieconsent@3/dist/cookieconsent.umd.js"></script>
+    <!-- Accessibility Toolbar -->
+    <script src="https://cdn.jsdelivr.net/npm/accessibility@4.0.0/dist/main.bundle.js" onerror="this.onerror=null;this.src='/assets/js/accessibility.min.js'" defer></script>
+<!-- Zappy Analytics -->
+<script>
+(function() {
+  'use strict';
+  
+  // Configuration
+  var config = {
+    websiteId: '93952f8d-f5b7-4944-b7b9-01b15f6bcf86',
+    apiUrl: 'http://localhost:5001/api/analytics/track',
+    sessionDuration: 30 * 60 * 1000, // 30 minutes
+    trackPageViews: true,
+    trackClicks: true,
+    trackFormSubmissions: true
+  };
+  
+  // Generate or retrieve session ID
+  function getSessionId() {
+    var sessionKey = 'zappy_session_' + config.websiteId;
+    var session = null;
+    
+    try {
+      session = sessionStorage.getItem(sessionKey);
+      if (session) {
+        var sessionData = JSON.parse(session);
+        var now = Date.now();
+        
+        // Check if session is still valid
+        if (now - sessionData.timestamp < config.sessionDuration) {
+          // Update timestamp
+          sessionData.timestamp = now;
+          sessionStorage.setItem(sessionKey, JSON.stringify(sessionData));
+          return sessionData.id;
+        }
+      }
+    } catch (e) {
+      console.warn('Zappy Analytics: SessionStorage not available');
+    }
+    
+    // Generate new session ID
+    var newSessionId = 'zs_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
+    try {
+      sessionStorage.setItem(sessionKey, JSON.stringify({
+        id: newSessionId,
+        timestamp: Date.now()
+      }));
+    } catch (e) {
+      // Continue without session storage
+    }
+    
+    return newSessionId;
+  }
+  
+  var sessionId = getSessionId();
+  
+  // Track an event
+  function trackEvent(eventType, data) {
+    data = data || {};
+    
+    var eventData = {
+      website_id: config.websiteId,
+      event_type: eventType,
+      page_path: window.location.pathname,
+      referrer: document.referrer || 'direct',
+      session_id: sessionId,
+      metadata: data
+    };
+    
+    // Use sendBeacon if available (better for page unload events)
+    if (navigator.sendBeacon) {
+      var blob = new Blob([JSON.stringify(eventData)], { type: 'application/json' });
+      navigator.sendBeacon(config.apiUrl, blob);
+    } else {
+      // Fallback to fetch
+      fetch(config.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(eventData),
+        keepalive: true
+      }).catch(function(error) {
+        console.warn('Zappy Analytics: Failed to track event', error);
+      });
+    }
+  }
+  
+  // Track page view
+  if (config.trackPageViews) {
+    trackEvent('pageview', {
+      title: document.title,
+      url: window.location.href
+    });
+  }
+  
+  // Track clicks on important elements
+  if (config.trackClicks) {
+    document.addEventListener('click', function(e) {
+      var target = e.target;
+      
+      // Track button clicks
+      if (target.tagName === 'BUTTON' || target.closest('button')) {
+        var button = target.tagName === 'BUTTON' ? target : target.closest('button');
+        trackEvent('click', {
+          element: 'button',
+          text: button.textContent.trim().substring(0, 100),
+          id: button.id || null,
+          class: button.className || null
+        });
+      }
+      
+      // Track link clicks
+      else if (target.tagName === 'A' || target.closest('a')) {
+        var link = target.tagName === 'A' ? target : target.closest('a');
+        trackEvent('click', {
+          element: 'link',
+          text: link.textContent.trim().substring(0, 100),
+          href: link.href,
+          external: link.hostname !== window.location.hostname
+        });
+      }
+    }, true);
+  }
+  
+  // Track form submissions
+  if (config.trackFormSubmissions) {
+    document.addEventListener('submit', function(e) {
+      var form = e.target;
+      
+      trackEvent('form_submit', {
+        form_id: form.id || null,
+        form_name: form.name || null,
+        form_action: form.action || null,
+        form_method: form.method || 'GET'
+      });
+    }, true);
+  }
+  
+  // Track time on page (send on page unload)
+  var pageLoadTime = Date.now();
+  
+  window.addEventListener('beforeunload', function() {
+    var timeOnPage = Math.floor((Date.now() - pageLoadTime) / 1000); // in seconds
+    
+    trackEvent('page_unload', {
+      time_on_page: timeOnPage,
+      page_path: window.location.pathname
+    });
+  });
+  
+  // Expose tracking function globally for custom events
+  window.zappyAnalytics = {
+    track: trackEvent,
+    getSessionId: function() { return sessionId; }
+  };
+  
+})();
+</script>
+<!-- End Zappy Analytics -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container"><a href="#" class="logo-link"><img src="assets/logo.webp" alt="עץ במקום" class="logo" style="height: 40px; margin-right: 15px;" /></a>
+            <div class="logo">
+                <span class="logo-icon">🪵</span>
+                <span class="logo-text">עץ במקום</span>
+            </div>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="תפריט">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#home" class="nav-link active">בית</a></li>
+                <li><a href="#about" class="nav-link">אודות</a></li>
+                <li><a href="#services" class="nav-link">שירותים</a></li>
+                <li><a href="#portfolio" class="nav-link">תיק עבודות</a></li>
+                <li><a href="#process" class="nav-link">תהליך העבודה</a></li>
+                <li><a href="#contact" class="nav-link">צור קשר</a></li>
+            </ul>
+            <a href="#contact" class="cta-button nav-cta">קבל הצעת מחיר</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-image">
+            <img src="assets/business-general-hero.webp" alt="עבודות נגרות מקצועיות">
+            <div class="hero-overlay"></div>
+        </div>
+        <div class="container hero-content">
+            <h1 class="hero-title">יצירת רהיטים בהתאמה אישית<br><span class="hero-subtitle">שמשלבת מקצועיות ואומנות</span></h1>
+            <p class="hero-description">נגרות איכותית ועבודות עץ מדויקות למעצבי פנים ולקוחות פרטיים. מתמחים בפתרונות מותאמים אישית שמשדרגים כל חלל.</p>
+            <div class="hero-buttons">
+                <a href="#contact" class="cta-button primary">קבל הצעת מחיר חינם</a>
+                <a href="#portfolio" class="cta-button secondary">צפה בעבודות שלנו</a>
+            </div>
+            <div class="hero-features">
+                <div class="hero-feature">
+                    <span class="feature-icon">✓</span>
+                    <span>15+ שנות ניסיון</span>
+                </div>
+                <div class="hero-feature">
+                    <span class="feature-icon">✓</span>
+                    <span>התאמה אישית מלאה</span>
+                </div>
+                <div class="hero-feature">
+                    <span class="feature-icon">✓</span>
+                    <span>אחריות מלאה</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-content">
+                    <span class="section-label">אודותינו</span>
+                    <h2 class="section-title">מקצועיות ואומנות<br>בכל פרט</h2>
+                    <p class="about-text">עץ במקום הוקמה מתוך אהבה עמוקה לעבודת עץ ומחויבות למצוינות. אנו מתמחים ביצירת רהיטים ופתרונות נגרות בהתאמה אישית, תוך שילוב של טכניקות מסורתיות וטכנולוגיה מתקדמת.</p>
+                    <p class="about-text">עם למעלה מ-15 שנות ניסיון בתחום, אנו גאים לשתף פעולה עם מעצבי פנים מובילים ולקוחות פרטיים הדורשים איכות ללא פשרות. כל פרויקט הוא עבורנו הזדמנות ליצור משהו ייחודי שישרת את הלקוח לשנים רבות.</p>
+                    <div class="about-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">500+</span>
+                            <span class="stat-label">פרויקטים הושלמו</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">100%</span>
+                            <span class="stat-label">שביעות רצון לקוחות</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">15+</span>
+                            <span class="stat-label">שנות ניסיון</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <img src="assets/business-general-service-1.webp" alt="סדנת נגרות מקצועית">
+                    <div class="about-badge">
+                        <span class="badge-icon">🏆</span>
+                        <span class="badge-text">איכות מובטחת</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services-section">
+        <div class="container">
+            <div class="section-header centered">
+                <span class="section-label">השירותים שלנו</span>
+                <h2 class="section-title">פתרונות נגרות מקיפים</h2>
+                <p class="section-description">מרהיטים מעוצבים ועד פתרונות אחסון מותאמים - אנו מציעים מגוון רחב של שירותי נגרות איכותיים</p>
+            </div>
+
+            <div class="services-showcase">
+                <!-- Service 1 - Featured -->
+                <div class="service-featured">
+                    <div class="service-image">
+                        <img src="assets/business-general-service-2.webp" alt="ארונות מטבח מעוצבים">
+                    </div>
+                    <div class="service-content">
+                        <h3 class="service-title">ארונות מטבח מעוצבים</h3>
+                        <p class="service-description">תכנון וביצוע ארונות מטבח בהתאמה אישית מלאה. משלבים פונקציונליות מקסימלית עם עיצוב מודרני, תוך שימוש בחומרים איכותיים ועמידים. כל ארון מותאם במדויק למידות המטבח ולצרכי הלקוח.</p>
+                        <ul class="service-features">
+                            <li>תכנון תלת-מימדי מקצועי</li>
+                            <li>מגוון רחב של גימורים וחומרים</li>
+                            <li>מנגנונים איכוtiים ועמידים</li>
+                            <li>התקנה מקצועית ומדויקת</li>
+                        </ul>
+                        <a href="#contact" class="service-cta">בקש פגישת ייעוץ →</a>
+                    </div>
+                </div>
+
+                <!-- Services Grid -->
+                <div class="services-grid">
+                    <div class="service-card">
+                        <div class="service-card-image">
+                            <img src="assets/business-general-service-3.webp" alt="ארונות הזזה ואחסון">
+                        </div>
+                        <div class="service-card-content">
+                            <h3>ארונות הזזה ואחסון</h3>
+                            <p>פתרונות אחסון חכמים ומעוצבים לחדרי שינה, מסדרונות וחללי מגורים. ארונות הזזה עם מנגנונים שקטים ועמידים, בהתאמה מלאה לצרכי האחסון שלך.</p>
+                            <a href="#contact" class="service-link">למידע נוסף →</a>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-card-image">
+                            <img src="assets/business-general-service-4.webp" alt="רהיטים מעוצבים">
+                        </div>
+                        <div class="service-card-content">
+                            <h3>רהיטים מעוצבים לבית</h3>
+                            <p>יצירת רהיטים ייחודיים ומותאמים אישית - שולחנות, כוורות, מדפים, ספסלים ועוד. כל פריט מעוצב ומיוצר בקפידה מקסימלית, תוך התאמה מושלמת לסגנון הבית.</p>
+                            <a href="#contact" class="service-link">למידע נוסף →</a>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-card-image">
+                            <img src="assets/business-general-service-5.webp" alt="חיפוי קירות ופרקט">
+                        </div>
+                        <div class="service-card-content">
+                            <h3>חיפוי קירות ופרקט</h3>
+                            <p>התקנת פרקט ועבודות חיפוי קירות בעץ טבעי. משדרגים את החלל עם חומרים איכותיים ועבודה מקצועית שמדגישה את יופי העץ הטבעי.</p>
+                            <a href="#contact" class="service-link">למידע נוסף →</a>
+                        </div>
+                    </div>
+
+                    <div class="service-card">
+                        <div class="service-card-image">
+                            <img src="assets/business-general-service-6.webp" alt="שיפוץ ושיקום רהיטים">
+                        </div>
+                        <div class="service-card-content">
+                            <h3>שיפוץ ושיקום רהיטים</h3>
+                            <p>החייאת רהיטים ישנים ואהובים. שירותי שיפוץ מקצועיים שמחזירים לרהיטים את זוהרם המקורי, תוך שמירה על האופי הייחודי שלהם.</p>
+                            <a href="#contact" class="service-link">למידע נוסף →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="services-cta">
+                <h3>לא מצאת מה שחיפשת?</h3>
+                <p>אנו מתמחים בפתרונות מותאמים אישית. ספר לנו על הפרויקט שלך ונמצא את הפתרון המושלם.</p>
+                <a href="#contact" class="cta-button primary">צור קשר לייעוץ חינם</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio Section -->
+    <section id="portfolio" class="portfolio-section">
+        <div class="container">
+            <div class="section-header centered">
+                <span class="section-label">תיק עבודות</span>
+                <h2 class="section-title">פרויקטים שביצענו</h2>
+                <p class="section-description">מבחר עבודות שהושלמו בהצלחה עבור לקוחותינו</p>
+            </div>
+
+            <div class="portfolio-filters">
+                <button class="filter-btn active" data-filter="all">הכל</button>
+                <button class="filter-btn" data-filter="kitchen">מטבחים</button>
+                <button class="filter-btn" data-filter="closet">ארונות</button>
+                <button class="filter-btn" data-filter="furniture">רהיטים</button>
+                <button class="filter-btn" data-filter="commercial">מסחרי</button>
+            </div>
+
+            <div class="portfolio-grid">
+                <div class="portfolio-item" data-category="kitchen">
+                    <div class="portfolio-image">
+                        <img src="assets/business-general-service-2.webp" alt="מטבח מעוצב">
+                        <div class="portfolio-overlay">
+                            <h3>מטבח מודרני בתל אביב</h3>
+                            <p>עיצוב ייחודי עם גימור מט ומשטחי קוריאן</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portfolio-item" data-category="closet">
+                    <div class="portfolio-image">
+                        <img src="assets/business-general-service-3.webp" alt="ארון הזזה">
+                        <div class="portfolio-overlay">
+                            <h3>ארון הזזה מעוצב</h3>
+                            <p>פתרון אחסון מקסימלי לחדר שינה</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portfolio-item" data-category="furniture">
+                    <div class="portfolio-image">
+                        <img src="assets/business-general-service-4.webp" alt="שולחן אוכל">
+                        <div class="portfolio-overlay">
+                            <h3>שולחן אוכל מעץ מלא</h3>
+                            <p>עיצוב קלאסי מעץ אלון מלא</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portfolio-item" data-category="commercial">
+                    <div class="portfolio-image">
+                        <img src="assets/business-general-service-5.webp" alt="חיפוי עץ למשרד">
+                        <div class="portfolio-overlay">
+                            <h3>חיפוי עץ למשרד</h3>
+                            <p>עיצוב מרשים לחלל עבודה יוקרתי</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portfolio-item" data-category="kitchen">
+                    <div class="portfolio-image">
+                        <img src="assets/business-general-service-1.webp" alt="מטבח קלאסי">
+                        <div class="portfolio-overlay">
+                            <h3>מטבח קלאסי בירושלים</h3>
+                            <p>שילוב של עיצוב מסורתי וחומרים מודרניים</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portfolio-item" data-category="furniture">
+                    <div class="portfolio-image">
+                        <img src="assets/business-general-service-6.webp" alt="ספרייה מעוצבת">
+                        <div class="portfolio-overlay">
+                            <h3>ספרייה מעוצבת לסלון</h3>
+                            <p>עיצוב אישי המשלב אחסון ותצוגה</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section id="process" class="process-section">
+        <div class="container">
+            <div class="section-header centered">
+                <span class="section-label">תהליך העבודה</span>
+                <h2 class="section-title">איך אנחנו עובדים</h2>
+                <p class="section-description">תהליך מקצועי ושקוף מתחילת הפרויקט ועד למסירה</p>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-marker">1</div>
+                    <div class="timeline-content">
+                        <h3>פגישת ייעוץ ראשונית</h3>
+                        <p>נפגשים, מקשיבים לצרכים שלך ומבינים את החזון. בודקים את המרחב ומציעים רעיונות ראשוניים.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker">2</div>
+                    <div class="timeline-content">
+                        <h3>תכנון ועיצוב</h3>
+                        <p>יוצרים תוכנית מפורטת עם תכניות תלת-מימד, בוחרים חומרים ומציגים הצעת מחיר מדויקת.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker">3</div>
+                    <div class="timeline-content">
+                        <h3>ייצור בסדנה</h3>
+                        <p>מייצרים את הרהיטים בסדנה שלנו עם ציוד מתקדם ומקצועיות גבוהה. עדכונים שוטפים על התקדמות העבודה.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker">4</div>
+                    <div class="timeline-content">
+                        <h3>התקנה ומסירה</h3>
+                        <p>מתקינים את הרהיטים במקום בצורה מקצועית ומדויקת. מוודאים שהכל מושלם לפני המסירה הסופית.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker">5</div>
+                    <div class="timeline-content">
+                        <h3>שירות ואחריות</h3>
+                        <p>מעניקים אחריות מלאה ונשארים זמינים לכל שאלה או בעיה. שביעות רצונך היא העדיפות שלנו.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section">
+        <div class="container">
+            <div class="section-header centered">
+                <span class="section-label">המלצות</span>
+                <h2 class="section-title">מה הלקוחות שלנו אומרים</h2>
+            </div>
+
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                    </div>
+                    <p class="testimonial-text">"עבודה מקצועית ברמה הגבוהה ביותר! המטבח שקיבלנו עלה על כל הציפיות. תשומת לב לפרטים, איכות בנייה מעולה ושירות מדהים. ממליצה בחום!"</p>
+                    <div class="testimonial-author">
+                        <strong>שרה כהן</strong>
+                        <span>תל אביב</span>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                    </div>
+                    <p class="testimonial-text">"כמעצבת פנים, אני עובדת עם הרבה נגרים. עץ במקום הם הטובים ביותר - מקצועיים, אמינים ומבצעים עבודה ברמה גבוהה. כל פרויקט יוצא מושלם!"</p>
+                    <div class="testimonial-author">
+                        <strong>רונית לוי</strong>
+                        <span>מעצבת פנים</span>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                    </div>
+                    <p class="testimonial-text">"הזמנו ארון הזזה מותאם אישית וקיבלנו בדיוק מה שרצינו. התהליך היה מקצועי, השירות מעולה והתוצאה פשוט מדהימה. שווה כל שקל!"</p>
+                    <div class="testimonial-author">
+                        <strong>דוד מזרחי</strong>
+                        <span>חיפה</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <div class="contact-wrapper">
+                <div class="contact-info">
+                    <h2>בואו נדבר על הפרויקט שלכם</h2>
+                    <p>מעוניינים ברהיט מותאם אישית או בפתרון נגרות מקצועי? נשמח לשמוע ממך ולהציע פתרון מושלם.</p>
+                    
+                    <div class="contact-methods">
+                        <div class="contact-method">
+                            <div class="method-icon">📞</div>
+                            <div class="method-content">
+                                <h3>טלפון</h3>
+                                <a href="tel:0501234567">050-123-4567</a>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <div class="method-icon">✉️</div>
+                            <div class="method-content">
+                                <h3>אימייל</h3>
+                                <a href="mailto:info@woodinplace.co.il">info@woodinplace.co.il</a>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <div class="method-icon">📍</div>
+                            <div class="method-content">
+                                <h3>כתובת</h3>
+                                <p>אזור המרכז, ישראל</p>
+                            </div>
+                        </div>
+
+                        <div class="contact-method">
+                            <div class="method-icon">🕒</div>
+                            <div class="method-content">
+                                <h3>שעות פעילות</h3>
+                                <p>ראשון-חמישי: 8:00-18:00<br>שישי: 8:00-13:00</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="trust-badges">
+                        <div class="trust-badge">
+                            <span class="badge-icon">✓</span>
+                            <span>אחריות מלאה</span>
+                        </div>
+                        <div class="trust-badge">
+                            <span class="badge-icon">✓</span>
+                            <span>ייעוץ ללא עלות</span>
+                        </div>
+                        <div class="trust-badge">
+                            <span class="badge-icon">✓</span>
+                            <span>15+ שנות ניסיון</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact-form-wrapper">
+                    <form class="contact-form" id="contactForm">
+                        <h3>שלח הודעה</h3>
+                        <div class="form-group">
+                            <input type="text" id="name" name="name" placeholder="שם מלא" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="tel" id="phone" name="phone" placeholder="טלפון" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" id="email" name="email" placeholder="אימייל" required>
+                        </div>
+                        <div class="form-group">
+                            <select id="service" name="service" required>
+                                <option value="">בחר סוג שירות</option>
+                                <option value="kitchen">ארונות מטבח</option>
+                                <option value="closet">ארונות הזזה</option>
+                                <option value="furniture">רהיטים מעוצבים</option>
+                                <option value="flooring">פרקט וחיפוי</option>
+                                <option value="renovation">שיפוץ רהיטים</option>
+                                <option value="other">אחר</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <textarea id="message" name="message" placeholder="ספר לנו על הפרויקט שלך" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="cta-button primary">שלח הודעה</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    
+    <!-- Legal Footer -->
+    <footer class="legal-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-main">
+            <p>© 2025 עץ במקום. כל הזכויות שמורות.</p>
+            <p class="zappy-attribution">נוצר באמצעות Zappy</p>
+          </div>
+          
+          <div class="footer-legal">
+            <a href="privacy.html" target="_blank" rel="noopener" aria-label="מדיניות פרטיות">
+              מדיניות פרטיות
+            </a>
+            <span class="separator">|</span>
+            <a href="accessibility.html" target="_blank" rel="noopener" aria-label="נגישות">
+              נגישות
+            </a>
+            <span class="separator">|</span>
+            <a href="terms.html" target="_blank" rel="noopener" aria-label="תנאי שימוש">
+              תנאי שימוש
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <div data-integration="accessibility:toolbar"></div>
+</body>
+</html>
